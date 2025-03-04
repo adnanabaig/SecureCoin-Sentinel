@@ -13,7 +13,7 @@ const CoinPage = async ({ params }: { params: { coinID: string } }) => {
     coinData = await response.json();
   } catch (error) {
     console.error("Error fetching coin data:", error);
-    redirect("/"); // Redirect if there's an error. task redirect to not found page instead of home page. need to create not found page
+    redirect("/TokenNotFound"); // Redirect if there's an error. task redirect to not found page instead of home page. need to create not found page
   }
 
   const { name, coinSymbol, image } = coinData;
