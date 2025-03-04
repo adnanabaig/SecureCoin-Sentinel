@@ -1,3 +1,4 @@
+//  task: create new pages like discover trending tokens, recently looked at
 import { redirect } from "next/navigation";
 import Gauge from "./components/Gauge";
 import Stat from "./components/Stat";
@@ -17,29 +18,24 @@ const CoinPage = async ({ params }: { params: { coinID: string } }) => {
     redirect("/TokenNotFound"); // Redirect if there's an error. task redirect to not found page instead of home page. need to create not found page
   }
 
-  const { name, coinSymbol, image } = coinData;
+  const { name, symbol, image } = coinData;
+  console.log(coinData);
 
   return (
     <>
-    <Navbar />
-      <div className="h-screen w-screen px-20">
+      <Navbar />
+      <div className="bg-gray-900">
         <div className="h-40 relative">
-          <img
-            alt="coinlogo"
-            className=" p-8 h-full absolute top-0 left-0 pl-20 "
-            src={image.large}
-          />
-          <div className="h-full justify-center items-center flex flex-col">
-            <h1 className="text-6xl">{name}</h1>
-            <p className="text-4xl">{coinSymbol}</p>
+          <div className="h-full justify-center items-center flex flex-col text-white">
+            <h1 className="text-6xl font-bold ">{name}</h1>
+            <p className="text-4xl">{symbol}</p>
           </div>
-          <span className="absolute top-0 right-0 pt-2  ">
-            <p className="text-center -mb-2">Scam Meter</p>
-            <Gauge scamRatingValue={10} />
-          </span>
+        </div>
+        <div className="flex justify-center items-center ">
+          <Gauge scamRatingValue={10} />
         </div>
         <div className="statistic mt-12 flex flex-col items-center">
-          <Stat />
+          <Stat coinData={coinData} />
         </div>
       </div>
     </>

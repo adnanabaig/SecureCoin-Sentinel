@@ -10,7 +10,7 @@ const Gauge = ({scamRatingValue}) => {
         value={scamRatingValue}
         minValue={0}
         maxValue={100}
-        style={{ width: "150px"}} // Adjust size
+        style={{ width: "300px"}} // Adjust size
         labels={{
           tickLabels: {
             type: "inner",
@@ -20,7 +20,7 @@ const Gauge = ({scamRatingValue}) => {
                 if (value === 100) return "SCAM";
                 return value + "ºC"; // Fix missing return statement
               },
-              style: { fontSize: 6, fill: "white" }, // Increase font size
+              style: { fontSize: 8, fill: "white" }, // Increase font size
             },
           },
         }}
