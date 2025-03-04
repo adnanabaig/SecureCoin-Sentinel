@@ -2,25 +2,25 @@
 import React from "react";
 import GaugeComponent from "react-gauge-component";
 
-const Gauge = () => {
+const Gauge = ({scamRatingValue}) => {
   return (
-    <div className="bg-blue-400 w-full flex justify-center items-center">
+    <div className=" h-full">
       <GaugeComponent
         type="radial"
-        value={30}
+        value={scamRatingValue}
         minValue={0}
         maxValue={100}
-        style={{ width: "80px", height: "50px" }} // Adjust size
+        style={{ width: "150px"}} // Adjust size
         labels={{
           tickLabels: {
-            type: "outer",
+            type: "inner",
             defaultTickValueConfig: {
               formatTextValue: (value) => {
-                if (value === 0) return "NOT A SCAM";
+                if (value === 0) return "LEGIT";
                 if (value === 100) return "SCAM";
                 return value + "ºC"; // Fix missing return statement
               },
-              style: { fontSize: 10, fill: "white" }, // Increase font size
+              style: { fontSize: 6, fill: "white" }, // Increase font size
             },
           },
         }}

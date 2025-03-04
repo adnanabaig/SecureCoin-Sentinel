@@ -2,6 +2,7 @@
 
 import { SetStateAction, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Navbar from "./components/Navbar";
 
 interface Coin {
   id: string;
@@ -74,40 +75,43 @@ const Home = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
-      <h1 className="text-3xl font-bold mb-6">SecureCoin Sentinel</h1>
-      <p className="mb-4 text-gray-400">
-        Enter a token symbol to check for rug pull risks.
-      </p>
+    <>
+    <Navbar />
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
+        <h1 className="text-3xl font-bold mb-6">SecureCoin Sentinel</h1>
+        <p className="mb-4 text-gray-400">
+          Enter a token symbol to check for rug pull risks.
+        </p>
 
-      {/* Token Search Form */}
-      <form onSubmit={handleSearch} className="mb-4">
-        <input
-          type="text"
-          className="w-80 p-4 text-lg text-white bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter Token Symbol (e.g., SHIB, PEPE, DOGE)"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        {error && <p className="text-red-500 mt-2">{error}</p>}
-      </form>
-      <div className="min-h-[300px]">
-        {/* Coin List */}
-        {filteredCoins.length > 0 && (
-          <ul className="w-80 space-y-2">
-            {filteredCoins.map((coin) => (
-              <li
-                key={coin.id}
-                onClick={() => handleCoinSelect(coin.id)}
-                className="p-2 cursor-pointer hover:bg-gray-700 rounded-md"
-              >
-                {coin.name} ({coin.symbol.toUpperCase()})
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* Token Search Form */}
+        <form onSubmit={handleSearch} className="mb-4">
+          <input
+            type="text"
+            className="w-80 p-4 text-lg text-white bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter Token Symbol (e.g., SHIB, PEPE, DOGE)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {error && <p className="text-red-500 mt-2">{error}</p>}
+        </form>
+        <div className="h-[300px]">
+          {/* Coin List */}
+          {filteredCoins.length > 0 && (
+            <ul className="w-80 space-y-2">
+              {filteredCoins.map((coin) => (
+                <li
+                  key={coin.id}
+                  onClick={() => handleCoinSelect(coin.id)}
+                  className="p-2 cursor-pointer hover:bg-gray-700 rounded-md"
+                >
+                  {coin.name} ({coin.symbol.toUpperCase()})
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
