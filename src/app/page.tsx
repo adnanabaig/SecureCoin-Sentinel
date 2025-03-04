@@ -9,11 +9,11 @@ interface Coin {
   symbol: string;
 }
 
-export default function HomePage() {
-  const [search, setSearch] = useState<string>("");
+const Home = () => {
+  const [search, setSearch] = useState("");
+  const router = useRouter();
   const [allCoins, setAllCoins] = useState<Coin[]>([]); // Store all coins
   const [filteredCoins, setFilteredCoins] = useState<Coin[]>([]); // Store filtered coins
-  const router = useRouter();
 
   // useEffect to fetch the coins list when the component is mounted
   useEffect(() => {
@@ -27,11 +27,17 @@ export default function HomePage() {
       setFilteredCoins([]); // Clear filtered coins when search is empty
     }
   }, [search]);
+  const [tokenSymbol, setTokenSymbol] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && search.trim() !== "") {
-      router.push(`/token/${search}`);
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!tokenSymbol.trim()) {
+      setError("Please enter a valid token symbol.");
+      return;
     }
+    setError("");
+    router.push(`/token/${tokenSymbol.toLowerCase()}`);
   };
 
   // Function to fetch coins list from CoinGecko
@@ -84,25 +90,8 @@ export default function HomePage() {
         onChange={(e) => setSearch(e.target.value)}
         onKeyDown={handleSearch}
       />
-      <div className="mt-1 w-80 min-h-[250px] ">
-        {filteredCoins.length === 0 && search ? (
-          <p>No tokens found matching "{search}"</p>
-        ) : (
-          <div className="flex items-center justify-center ">
-            <ul className=" bg-gray-700 text-white  mt-2 rounded-lg shadow-md max-h-[200px] overflow-y-auto">
-              {filteredCoins.map((coin) => (
-                <li
-                  key={coin.id}
-                  className="p-2 hover:bg-gray-500 cursor-pointer text-left"
-                  onClick={() => handleCoinSelect(coin.id)} // Select a coin when clicked
-                >
-                  {coin.name} ({coin.id})
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
     </div>
   );
-}
+};
+
+export default Home;
