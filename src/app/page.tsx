@@ -43,9 +43,7 @@ const Home = () => {
   // Fetch coins list from CoinGecko
   const fetchCoinsList = async () => {
     try {
-      const response = await fetch(
-        "https://api.coingecko.com/api/v3/coins/list"
-      );
+      const response = await fetch("/api/coinsList");
       const coins = await response.json();
       setAllCoins(coins); // Store the full list of coins (unfiltered)
     } catch (error) {
@@ -72,7 +70,7 @@ const Home = () => {
 
   const handleCoinSelect = (coinID: string) => {
     setSearch(coinID); // Set the selected coin id as the query
-    router.push(`/coinProfile/${coinID}`); // Navigate to the coin profile page
+    router.push(`/token/${coinID}`); // Navigate to the coin profile page
   };
 
   return (
@@ -93,7 +91,7 @@ const Home = () => {
         />
         {error && <p className="text-red-500 mt-2">{error}</p>}
       </form>
-      <div className="min-h-[250px]">
+      <div className="min-h-[300px]">
         {/* Coin List */}
         {filteredCoins.length > 0 && (
           <ul className="w-80 space-y-2">
