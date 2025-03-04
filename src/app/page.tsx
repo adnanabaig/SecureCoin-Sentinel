@@ -11,36 +11,36 @@ interface Coin {
 
 const Home = () => {
   const [search, setSearch] = useState("");
-  const router = useRouter();
   const [allCoins, setAllCoins] = useState<Coin[]>([]); // Store all coins
   const [filteredCoins, setFilteredCoins] = useState<Coin[]>([]); // Store filtered coins
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-  // useEffect to fetch the coins list when the component is mounted
+  // Fetch the list of all coins when the component mounts
   useEffect(() => {
     fetchCoinsList();
   }, []);
 
+  // Filter coins when the search query changes
   useEffect(() => {
     if (search) {
-      setFilteredCoins(filterCoins().slice(0, 15)); // Apply the filter and limit to top 5 matches
+      setFilteredCoins(filterCoins().slice(0, 5)); // Apply the filter and limit to top 15 matches
     } else {
       setFilteredCoins([]); // Clear filtered coins when search is empty
     }
   }, [search]);
-  const [tokenSymbol, setTokenSymbol] = useState("");
-  const [error, setError] = useState("");
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!tokenSymbol.trim()) {
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent form submission behavior
+    if (!search.trim()) {
       setError("Please enter a valid token symbol.");
       return;
     }
     setError("");
-    router.push(`/token/${tokenSymbol.toLowerCase()}`);
+    router.push(`/token/${search.toLowerCase()}`);
   };
 
-  // Function to fetch coins list from CoinGecko
+  // Fetch coins list from CoinGecko
   const fetchCoinsList = async () => {
     try {
       const response = await fetch(
@@ -53,12 +53,12 @@ const Home = () => {
     }
   };
 
-  const escapeSpecialChars = (str: String) => {
-    // Escape backslashes, square brackets, and other special regex characters
+  // Escape special regex characters in the search query
+  const escapeSpecialChars = (str: string) => {
     return str.replace(/[.*+?^=!:${}()|\[\]\/\\]/g, "\\$&");
   };
 
-  // Filter coins based on the query and regex pattern
+  // Filter coins based on the query
   const filterCoins = () => {
     try {
       const sanitizedQuery = escapeSpecialChars(search); // Escape special characters in the query
@@ -66,13 +66,12 @@ const Home = () => {
       return allCoins.filter((coin) => regex.test(coin.id)); // Filter the coins list
     } catch (error) {
       console.error("Invalid regex pattern:", error);
-      return []; // Return empty array if regex is invalid
+      return [];
     }
   };
 
   const handleCoinSelect = (coinID: string) => {
     setSearch(coinID); // Set the selected coin id as the query
-    console.log("Selected coin:", coinID);
     router.push(`/coinProfile/${coinID}`); // Navigate to the coin profile page
   };
 
@@ -82,14 +81,34 @@ const Home = () => {
       <p className="mb-4 text-gray-400">
         Enter a token symbol to check for rug pull risks.
       </p>
-      <input
-        type="text"
-        className="w-80 p-4 text-lg text-white bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="Enter Token Symbol (e.g., SHIB, PEPE, DOGE)"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        onKeyDown={handleSearch}
-      />
+
+      {/* Token Search Form */}
+      <form onSubmit={handleSearch} className="mb-4">
+        <input
+          type="text"
+          className="w-80 p-4 text-lg text-white bg-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter Token Symbol (e.g., SHIB, PEPE, DOGE)"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        {error && <p className="text-red-500 mt-2">{error}</p>}
+      </form>
+      <div className="min-h-[250px]">
+        {/* Coin List */}
+        {filteredCoins.length > 0 && (
+          <ul className="w-80 space-y-2">
+            {filteredCoins.map((coin) => (
+              <li
+                key={coin.id}
+                onClick={() => handleCoinSelect(coin.id)}
+                className="p-2 cursor-pointer hover:bg-gray-700 rounded-md"
+              >
+                {coin.name} ({coin.symbol.toUpperCase()})
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };
