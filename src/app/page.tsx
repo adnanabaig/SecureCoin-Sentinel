@@ -58,7 +58,7 @@ export default function Home() {
         volume: data.market_data.total_volume.usd,
         high_24h: data.market_data.high_24h.usd,
         low_24h: data.market_data.low_24h.usd,
-        scam_risk: 75, // Filler scam risk (random number for now)
+        scam_risk: 90, // Filler scam risk (random number for now)
       };
       setCoinStats(stats); // Set coin stats state
     } catch (error) {
@@ -164,7 +164,7 @@ export default function Home() {
                       : "N/A"}
                   </li>
                   <li>
-                    <strong>24h Volume:</strong> $$
+                    <strong>24h Volume:</strong> $
                     {coinStats.volume
                       ? coinStats.volume.toLocaleString()
                       : "N/A"}
@@ -183,6 +183,7 @@ export default function Home() {
               {/* Scam Risk Pie Chart Section */}
               <div className="bg-gray-800 p-4 rounded-lg text-white w-96">
                 <h2 className="text-2xl font-semibold">Scam Risk</h2>
+                <p>{coinStats.scam_risk}% a scam</p>
                 <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie
