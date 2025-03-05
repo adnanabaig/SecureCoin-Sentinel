@@ -1,115 +1,210 @@
 "use client";
-import React, { useState } from "react";
-import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer } from "recharts";
+import { useState, useEffect } from "react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+} from "recharts";
 
-const Homepage = () => {
-  const [token, setToken] = useState("");
-  const [scamData, setScamData] = useState(null);
+// Define types for the coin data and component state
+type Coin = {
+  id: string;
+  name: string;
+};
 
-  const fetchTokenData = async () => {
+type CoinStats = {
+  market_cap: number;
+  current_price: number;
+  volume: number;
+  high_24h: number;
+  low_24h: number;
+  scam_risk: number; // Scam risk property
+};
+
+export default function Home() {
+  const [query, setQuery] = useState<string>(""); // State to store the query
+  const [allCoins, setAllCoins] = useState<Coin[]>([]); // State to store all coins (unfiltered)
+  const [filteredCoins, setFilteredCoins] = useState<Coin[]>([]); // State to store filtered coins
+  const [loading, setLoading] = useState<boolean>(false); // State to manage loading state
+  const [coinStats, setCoinStats] = useState<CoinStats | null>(null); // State to store selected coin stats
+
+  // Function to fetch coins list from CoinGecko
+  const fetchCoinsList = async () => {
     try {
-      const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${token.toLowerCase()}&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true`);
-      const data = await response.json();
-      
-      if (!data[token.toLowerCase()]) {
-        alert("Token not found. Please enter a valid token symbol.");
-        return;
-      }
-      
-      const riskScore = Math.floor(Math.random() * 100); // Placeholder for scam score, replace with actual API
-      const riskLabel = riskScore > 60 ? "High Risk" : riskScore > 30 ? "Medium Risk" : "Low Risk";
-      
-      const tokenData = {
-        name: token.toUpperCase(),
-        symbol: token.toUpperCase(),
-        riskScore,
-        riskLabel,
-        price: `$${data[token.toLowerCase()].usd.toLocaleString()}`,
-        marketCap: `$${data[token.toLowerCase()].usd_market_cap.toLocaleString()}`,
-        volume: `$${data[token.toLowerCase()].usd_24h_vol.toLocaleString()}`,
-      };
-      
-      setScamData(tokenData);
+      setLoading(true); // Set loading to true before fetching data
+      const response = await fetch(
+        "https://api.coingecko.com/api/v3/coins/list"
+      );
+      const coins: Coin[] = await response.json();
+      setAllCoins(coins); // Store the full list of coins (unfiltered)
+      setLoading(false); // Set loading to false after data is fetched
     } catch (error) {
-      console.error("Error fetching token data:", error);
-      alert("Failed to fetch token data. Please try again later.");
+      console.error("Error fetching coin list:", error);
+      setLoading(false); // Set loading to false if there is an error
     }
   };
 
-  const scamRiskChartData = scamData ? [{ name: "Risk Score", value: scamData.riskScore, fill: scamData.riskScore > 60 ? "#ff4d4d" : scamData.riskScore > 30 ? "#ffcc00" : "#4caf50" }] : [];
+  // Function to fetch the statistics of a specific coin
+  const fetchCoinStats = async (coinID: string) => {
+    try {
+      const response = await fetch(
+        `https://api.coingecko.com/api/v3/coins/${coinID}`
+      );
+      const data = await response.json();
+      const stats: CoinStats = {
+        market_cap: data.market_data.market_cap.usd,
+        current_price: data.market_data.current_price.usd,
+        volume: data.market_data.total_volume.usd,
+        high_24h: data.market_data.high_24h.usd,
+        low_24h: data.market_data.low_24h.usd,
+        scam_risk: 75, // Filler scam risk (random number for now)
+      };
+      setCoinStats(stats); // Set coin stats state
+    } catch (error) {
+      console.error("Error fetching coin stats:", error);
+    }
+  };
+
+  const escapeSpecialChars = (str: string): string => {
+    // Escape backslashes, square brackets, and other special regex characters
+    return str.replace(/[.*+?^=!:${}()|\[\]\/\\]/g, "\\$&");
+  };
+
+  // Filter coins based on the query and regex pattern
+  const filterCoins = (): Coin[] => {
+    try {
+      const sanitizedQuery = escapeSpecialChars(query); // Escape special characters in the query
+      const regex = new RegExp(`^${sanitizedQuery}`, "i"); // Regex pattern to match tokens (case-insensitive)
+      return allCoins.filter((coin) => regex.test(coin.id)); // Filter the coins list
+    } catch (error) {
+      console.error("Invalid regex pattern:", error);
+      return []; // Return empty array if regex is invalid
+    }
+  };
+
+  // useEffect to fetch the coins list when the component is mounted
+  useEffect(() => {
+    fetchCoinsList();
+  }, []);
+
+  // useEffect to filter coins and reset stats when the query changes
+  useEffect(() => {
+    setCoinStats(null); // Reset coin stats when query changes
+    if (query) {
+      setFilteredCoins(filterCoins().slice(0, 5)); // Filter coins based on the query
+    } else {
+      setFilteredCoins([]); // Clear filtered coins when query is empty
+    }
+  }, [query]);
+
+  // Handle selection of a coin from the dropdown
+  const handleCoinSelect = (coinID: string) => {
+    setFilteredCoins([]); // Clear the filtered coins list after selecting a coin
+    setQuery(coinID); // Set the selected coin id as the query
+    fetchCoinStats(coinID); // Fetch and display the stats of the selected coin
+  };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900 text-white">
-      {/* Main Content */}
-      <main className="flex flex-col items-center text-center p-6">
-        <h1 className="text-4xl font-bold mb-4">SecureCoin Sentinel</h1>
-        <p className="text-lg text-gray-400 mb-6">
-          Enter a token symbol to check for rug pull risks.
-        </p>
-        
-        {/* Search Bar */}
-        <div className="relative w-96 flex">
-          <input
-            type="text"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="Enter Token Symbol (e.g., SHIB, PE)"
-            className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:ring-2 focus:ring-blue-500"
-          />
-          <button 
-            onClick={fetchTokenData}
-            className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-          >
-            Search
-          </button>
-        </div>
-        
-        {/* Scam Data Module Appears Directly Below Search Bar */}
-        {scamData && (
-          <div className="mt-8 bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-3xl transition-all duration-500 opacity-100 scale-100 flex flex-col md:flex-row items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">{scamData.name} ({scamData.symbol})</h2>
-              <div className="mt-4">
-                <p className="text-xl font-semibold">Scam Risk Score: {scamData.riskScore}%</p>
-                <p className="text-gray-400">Risk Level: {scamData.riskLabel}</p>
+    <div>
+      <div className="h-full pb-32 flex text-white">
+        <div className="pt-40 text-center w-full ">
+          <h1 className="text-4xl font-bold mb-6 w-full">
+            Find Tokens Matching Your Query
+          </h1>
+          <div className="relative mt-12 flex items-center justify-center bg-gray-600 p-4 rounded-full max-w-3xl mx-auto">
+            <input
+              type="text"
+              className="w-full border-none outline-none text-white placeholder-gray-500"
+              placeholder="Enter token query (e.g., dog)"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)} // Update query state
+            />
+            {!coinStats && (
+              <div className="absolute top-18 w-1/2 h-24 mt-1">
+                {loading ? (
+                  <p>Loading...</p>
+                ) : filteredCoins.length === 0 && !coinStats && query ? (
+                  <p>No tokens found matching "{query}"</p>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <ul className="bg-gray-700 text-white w-full mt-2 rounded-lg shadow-md max-h-[200px] overflow-y-auto">
+                      {filteredCoins.map((coin) => (
+                        <li
+                          key={coin.id}
+                          className="p-2 hover:bg-gray-500 cursor-pointer text-left"
+                          onClick={() => handleCoinSelect(coin.id)} // Select a coin when clicked
+                        >
+                          {coin.name} ({coin.id})
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-              <div className="mt-4 text-left">
-                <p><strong>Price:</strong> {scamData.price}</p>
-                <p><strong>Market Cap:</strong> {scamData.marketCap}</p>
-                <p><strong>24h Volume:</strong> {scamData.volume}</p>
+            )}
+          </div>
+
+          {coinStats ? (
+            <div className="flex justify-center space-x-4 mt-6">
+              {/* Coin Stats Section */}
+              <div className="bg-gray-800 p-4 rounded-lg text-white w-96">
+                <h2 className="text-2xl font-semibold">Coin Statistics</h2>
+                <ul className="mt-4 text-left">
+                  <li>
+                    <strong>Price:</strong> $
+                    {coinStats.current_price
+                      ? coinStats.current_price.toString()
+                      : "N/A"}
+                  </li>
+                  <li>
+                    <strong>Market Cap:</strong> $
+                    {coinStats.market_cap
+                      ? coinStats.market_cap.toString()
+                      : "N/A"}
+                  </li>
+                  <li>
+                    <strong>24h Volume:</strong> $$
+                    {coinStats.volume
+                      ? coinStats.volume.toLocaleString()
+                      : "N/A"}
+                  </li>
+                  <li>
+                    <strong>24h High:</strong> $
+                    {coinStats.high_24h ? coinStats.high_24h.toString() : "N/A"}
+                  </li>
+                  <li>
+                    <strong>24h Low:</strong> $
+                    {coinStats.low_24h ? coinStats.low_24h.toString() : "N/A"}
+                  </li>
+                </ul>
+              </div>
+
+              {/* Scam Risk Pie Chart Section */}
+              <div className="bg-gray-800 p-4 rounded-lg text-white w-96">
+                <h2 className="text-2xl font-semibold">Scam Risk</h2>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "Risk", value: coinStats.scam_risk },
+                        { name: "Safe", value: 100 - coinStats.scam_risk },
+                      ]}
+                      cx="50%" cy="50%" // Center of the pie chart
+                      outerRadius="80%" // Ensures a seamless circle
+                      dataKey="value"
+                      paddingAngle={0} // No padding between segments
+                    >
+                      <Cell fill="#ff0000" />
+                      <Cell fill="#00ff1e" />
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </div>
-            <div className="w-40 h-40">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart innerRadius="70%" outerRadius="100%" data={scamRiskChartData} startAngle={90} endAngle={-270}>
-                  <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-                  <RadialBar minAngle={15} background clockWise dataKey="value" cornerRadius={10} />
-                </RadialBarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
-        
-        {/* Risk Score and Insights - Moves Below Scam Data Module */}
-        <div className={`mt-10 w-full max-w-5xl transition-all duration-500 ${scamData ? 'translate-y-8' : ''}`}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-              <h3 className="text-xl font-semibold">Scam Risk Score</h3>
-              <p className="text-gray-400 mt-2">Real-time security analysis of token contracts.</p>
-            </div>
-            <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-              <h3 className="text-xl font-semibold">Liquidity & Volume</h3>
-              <p className="text-gray-400 mt-2">Track the liquidity and volume movement of a token.</p>
-            </div>
-            <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-              <h3 className="text-xl font-semibold">Community Trust</h3>
-              <p className="text-gray-400 mt-2">Analyze social media signals and community sentiment.</p>
-            </div>
-          </div>
+          ) : null}
         </div>
-      </main>
+      </div>
     </div>
   );
-};
-
-export default Homepage;
+}
