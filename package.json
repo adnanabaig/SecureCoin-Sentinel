@@ -19,7 +19,8 @@
     "next": "15.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-gauge-component": "^1.2.64"
+    "react-gauge-component": "^1.2.64",
+    "recharts": "^2.15.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
