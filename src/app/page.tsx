@@ -1,11 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-} from "recharts";
+import Navbar from "./components/Navbar";
+import CoinOverview from "./components/CoinOverview";
+import Suggestions from "./components/Suggestions";
+import StatsBox from "./components/StatsBox";
 
 // Define types for the coin data and component state
 type Coin = {
@@ -14,12 +12,15 @@ type Coin = {
 };
 
 type CoinStats = {
-  market_cap: number;
-  current_price: number;
+  name: string;
+  symbol: string;
+  marketCap: number;
+  price: number;
   volume: number;
   high_24h: number;
   low_24h: number;
-  scam_risk: number; // Scam risk property
+  riskScore: number; // Scam risk property
+  riskLabel: string; // Scam risk label
 };
 
 export default function Home() {
@@ -52,14 +53,29 @@ export default function Home() {
         `https://api.coingecko.com/api/v3/coins/${coinID}`
       );
       const data = await response.json();
+
+      console.log("API Response:", data); // Debugging
+      console.log("Name:", data?.name);
+      console.log("Symbol:", data?.symbol);
+
+      if (!data || !data.market_data) {
+        throw new Error("Invalid API response: missing market_data");
+      }
+
+      const riskScoreTemp = 80; // Placeholder scam risk (random number for now)
+
       const stats: CoinStats = {
-        market_cap: data.market_data.market_cap.usd,
-        current_price: data.market_data.current_price.usd,
-        volume: data.market_data.total_volume.usd,
-        high_24h: data.market_data.high_24h.usd,
-        low_24h: data.market_data.low_24h.usd,
-        scam_risk: 90, // Filler scam risk (random number for now)
+        name: data.name,
+        symbol: data.symbol,
+        marketCap: data.market_data?.market_cap?.usd ?? 0,
+        price: data.market_data?.current_price?.usd ?? 0,
+        volume: data.market_data?.total_volume?.usd ?? 0,
+        high_24h: data.market_data?.high_24h?.usd ?? 0,
+        low_24h: data.market_data?.low_24h?.usd ?? 0,
+        riskScore: riskScoreTemp,
+        riskLabel: riskScoreTemp > 50 ? "High Risk" : "Low Risk",
       };
+
       setCoinStats(stats); // Set coin stats state
     } catch (error) {
       console.error("Error fetching coin stats:", error);
@@ -107,11 +123,13 @@ export default function Home() {
 
   return (
     <div>
-      <div className="h-full pb-32 flex text-white">
+      <Navbar />
+      <div className="h-full  flex text-white">
         <div className="pt-40 text-center w-full ">
           <h1 className="text-4xl font-bold mb-6 w-full">
-            Find Tokens Matching Your Query
+            SecureCoin Sentinel
           </h1>
+          <p className="text-gray-300"> Enter a token to check for rug pull risks.</p>
           <div className="relative mt-12 flex items-center justify-center bg-gray-600 p-4 rounded-full max-w-3xl mx-auto">
             <input
               type="text"
@@ -124,86 +142,37 @@ export default function Home() {
               <div className="absolute top-18 w-1/2 h-24 mt-1">
                 {loading ? (
                   <p>Loading...</p>
-                ) : filteredCoins.length === 0 && !coinStats && query ? (
+                ) : filteredCoins.length === 0 && query ? (
                   <p>No tokens found matching "{query}"</p>
                 ) : (
-                  <div className="flex items-center justify-center">
-                    <ul className="bg-gray-700 text-white w-full mt-2 rounded-lg shadow-md max-h-[200px] overflow-y-auto">
-                      {filteredCoins.map((coin) => (
-                        <li
-                          key={coin.id}
-                          className="p-2 hover:bg-gray-500 cursor-pointer text-left"
-                          onClick={() => handleCoinSelect(coin.id)} // Select a coin when clicked
-                        >
-                          {coin.name} ({coin.id})
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <Suggestions
+                    filteredCoins={filteredCoins}
+                    handleCoinSelect={handleCoinSelect}
+                  />
                 )}
               </div>
             )}
           </div>
 
-          {coinStats ? (
-            <div className="flex justify-center space-x-4 mt-6">
-              {/* Coin Stats Section */}
-              <div className="bg-gray-800 p-4 rounded-lg text-white w-96">
-                <h2 className="text-2xl font-semibold">Coin Statistics</h2>
-                <ul className="mt-4 text-left">
-                  <li>
-                    <strong>Price:</strong> $
-                    {coinStats.current_price
-                      ? coinStats.current_price.toString()
-                      : "N/A"}
-                  </li>
-                  <li>
-                    <strong>Market Cap:</strong> $
-                    {coinStats.market_cap
-                      ? coinStats.market_cap.toString()
-                      : "N/A"}
-                  </li>
-                  <li>
-                    <strong>24h Volume:</strong> $
-                    {coinStats.volume
-                      ? coinStats.volume.toLocaleString()
-                      : "N/A"}
-                  </li>
-                  <li>
-                    <strong>24h High:</strong> $
-                    {coinStats.high_24h ? coinStats.high_24h.toString() : "N/A"}
-                  </li>
-                  <li>
-                    <strong>24h Low:</strong> $
-                    {coinStats.low_24h ? coinStats.low_24h.toString() : "N/A"}
-                  </li>
-                </ul>
-              </div>
-
-              {/* Scam Risk Pie Chart Section */}
-              <div className="bg-gray-800 p-4 rounded-lg text-white w-96">
-                <h2 className="text-2xl font-semibold">Scam Risk</h2>
-                <p>{coinStats.scam_risk}% a scam</p>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={[
-                        { name: "Risk", value: coinStats.scam_risk },
-                        { name: "Safe", value: 100 - coinStats.scam_risk },
-                      ]}
-                      cx="50%" cy="50%" // Center of the pie chart
-                      outerRadius="80%" // Ensures a seamless circle
-                      dataKey="value"
-                      paddingAngle={0} // No padding between segments
-                    >
-                      <Cell fill="#ff0000" />
-                      <Cell fill="#00ff1e" />
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+          {coinStats && (
+            <div className="flex flex-col justify-center items-center">
+              <CoinOverview scamData={coinStats} />
+              <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
+                <StatsBox
+                  title="Scam Risk Score"
+                  description="   Real-time security analysis of token contracts."
+                />
+                <StatsBox
+                  title="Liquidity & Volume"
+                  description="Track the liquidity and volume movement of a token."
+                />
+                <StatsBox
+                  title="Community Trust"
+                  description="Analyze social media signals and community sentiment."
+                />
               </div>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
     </div>

@@ -3,21 +3,21 @@ import React, { useState, useEffect, useRef } from "react";
 import MenuIcon from "@mui/icons-material/Menu";
 import Link from "next/link";
 
-const Navbar = () => {
-  const [open, setOpen] = useState(false);
-  const menuRef = useRef(null);
+const Navbar: React.FC = () => {
+  const [open, setOpen] = useState<boolean>(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   const toggleMenu = () => setOpen((prev) => !prev);
 
   // Close menu when clicking outside or pressing Escape key
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setOpen(false);
       }
     };
 
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpen(false);
       }
