@@ -68,7 +68,7 @@ const Navbar: React.FC = () => {
           </li>
           <li>
             <Link
-              href="/trendingcoins"
+              href="/discoverCoins"
               className="hover:text-gray-400 transition whitespace-nowrap"
             >
               Discover Trending Coins

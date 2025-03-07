@@ -5,10 +5,14 @@ import CoinOverview from "./components/CoinOverview";
 import Suggestions from "./components/Suggestions";
 import StatsBox from "./components/StatsBox";
 
+import { useSearchParams } from "next/navigation"; // Import useSearchParams for query parameters
+import { all } from "axios";
+
 // Define types for the coin data and component state
 type Coin = {
   id: string;
   name: string;
+  symbol: string; // Added symbol to Coin type
 };
 
 type CoinStats = {
@@ -24,43 +28,51 @@ type CoinStats = {
 };
 
 export default function Home() {
-  const [query, setQuery] = useState<string>(""); // State to store the query
+  const searchParams = useSearchParams(); // Initialize searchParams
+
+  const [query, setQuery] = useState<string>(""); // State to store the query (symbol)
   const [allCoins, setAllCoins] = useState<Coin[]>([]); // State to store all coins (unfiltered)
   const [filteredCoins, setFilteredCoins] = useState<Coin[]>([]); // State to store filtered coins
   const [loading, setLoading] = useState<boolean>(false); // State to manage loading state
   const [coinStats, setCoinStats] = useState<CoinStats | null>(null); // State to store selected coin stats
 
-  // Function to fetch coins list from CoinGecko
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchCoinsList();
+      // Extract coinSymbol from the query string when the component mounts
+      const coinSymbol = searchParams.get("coinSymbol");
+      if (coinSymbol) {
+        setQuery(coinSymbol);
+      }
+    };
+
+    fetchData();
+  }, [searchParams]); // Re-run effect when query changes
+
+  // Function to fetch the coins list from CoinGecko
   const fetchCoinsList = async () => {
     try {
       setLoading(true); // Set loading to true before fetching data
       const response = await fetch(
-        "https://api.coingecko.com/api/v3/coins/list"
+        "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd"
       );
       const coins: Coin[] = await response.json();
       setAllCoins(coins); // Store the full list of coins (unfiltered)
       setLoading(false); // Set loading to false after data is fetched
     } catch (error) {
-      console.error("Error fetching coin list:", error);
+      // console.error("Error fetching coin list:", error);
       setLoading(false); // Set loading to false if there is an error
     }
   };
 
-  // Function to fetch the statistics of a specific coin
-  const fetchCoinStats = async (coinID: string) => {
+  // Function to fetch the statistics of a specific coin using the symbol
+  const fetchCoinStats = async (coinId: string) => {
     try {
+      console.log("calling api with coinId", coinId);
       const response = await fetch(
-        `https://api.coingecko.com/api/v3/coins/${coinID}`
+        `https://api.coingecko.com/api/v3/coins/${coinId}`
       );
       const data = await response.json();
-
-      console.log("API Response:", data); // Debugging
-      console.log("Name:", data?.name);
-      console.log("Symbol:", data?.symbol);
-
-      if (!data || !data.market_data) {
-        throw new Error("Invalid API response: missing market_data");
-      }
 
       const riskScoreTemp = 80; // Placeholder scam risk (random number for now)
 
@@ -87,54 +99,52 @@ export default function Home() {
     return str.replace(/[.*+?^=!:${}()|\[\]\/\\]/g, "\\$&");
   };
 
-  // Filter coins based on the query and regex pattern
   const filterCoins = (): Coin[] => {
     try {
-      const sanitizedQuery = escapeSpecialChars(query); // Escape special characters in the query
-      const regex = new RegExp(`^${sanitizedQuery}`, "i"); // Regex pattern to match tokens (case-insensitive)
-      return allCoins.filter((coin) => regex.test(coin.id)); // Filter the coins list
+      const sanitizedQuery = escapeSpecialChars(query);
+      const regex = new RegExp(sanitizedQuery, "i");
+      return allCoins.filter(
+        (coin) => regex.test(coin.symbol) || regex.test(coin.name)
+      );
     } catch (error) {
       console.error("Invalid regex pattern:", error);
-      return []; // Return empty array if regex is invalid
+      return []; // Optionally, show an error message or fallback UI here
     }
   };
-
-  // useEffect to fetch the coins list when the component is mounted
-  useEffect(() => {
-    fetchCoinsList();
-  }, []);
 
   // useEffect to filter coins and reset stats when the query changes
   useEffect(() => {
     setCoinStats(null); // Reset coin stats when query changes
     if (query) {
-      setFilteredCoins(filterCoins().slice(0, 5)); // Filter coins based on the query
+      setFilteredCoins(filterCoins().slice(0, 5)); // Filter coins based on the query (symbol)
     } else {
       setFilteredCoins([]); // Clear filtered coins when query is empty
     }
   }, [query]);
 
   // Handle selection of a coin from the dropdown
-  const handleCoinSelect = (coinID: string) => {
+  const handleCoinSelect = (coinId: string) => {
     setFilteredCoins([]); // Clear the filtered coins list after selecting a coin
-    setQuery(coinID); // Set the selected coin id as the query
-    fetchCoinStats(coinID); // Fetch and display the stats of the selected coin
+    setQuery(coinId); // Set the selected coin ID as the query (not the symbol)
+    fetchCoinStats(coinId); // Fetch and display the stats of the selected coin
   };
 
   return (
     <div>
       <Navbar />
-      <div className="h-full  flex text-white">
+      <div className="h-full flex text-white">
         <div className="pt-40 text-center w-full ">
           <h1 className="text-4xl font-bold mb-6 w-full">
-            SecureCoin Sentinel
+            SecureCoin Sentinel allcoins 
           </h1>
-          <p className="text-gray-300"> Enter a token to check for rug pull risks.</p>
+          <p className="text-gray-300">
+            Enter a token symbol to check for rug pull risks.
+          </p>
           <div className="relative mt-12 flex items-center justify-center bg-gray-600 p-4 rounded-full max-w-3xl mx-auto">
             <input
               type="text"
               className="w-full border-none outline-none text-white placeholder-gray-500"
-              placeholder="Enter token query (e.g., dog)"
+              placeholder="Enter coin symbol or name"
               value={query}
               onChange={(e) => setQuery(e.target.value)} // Update query state
             />

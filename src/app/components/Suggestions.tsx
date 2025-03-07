@@ -3,6 +3,7 @@ import React from "react";
 type Coin = {
   id: string;
   name: string;
+  symbol: string; // Added symbol to Coin type
 };
 
 const Suggestions = ({
@@ -21,7 +22,7 @@ const Suggestions = ({
             className="p-2 hover:bg-gray-500 cursor-pointer text-left"
             onClick={() => handleCoinSelect(coin.id)} // Select a coin when clicked
           >
-            {coin.name} ({coin.id})
+            {coin.name} ({coin.symbol.toUpperCase()})
           </li>
         ))}
       </ul>
