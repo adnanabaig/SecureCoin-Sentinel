@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // Import useRouter for navigation
 import Navbar from "../components/Navbar";
+import Image from "next/image";
 
 // Define the types for the API response data
 interface Coin {
@@ -114,10 +115,12 @@ const Page = () => {
                 <div className="flex items-center space-x-4 text-black">
                   {/* Optionally, display a logo if available */}
                   {/* Assuming CoinPaprika provides an image or logo URL for each coin */}
-                  <img
+                  <Image
                     src={`https://cryptocurrencyliveprices.com/img/${coin.id}.png`} // Adjust if CoinPaprika provides logos differently
                     alt={coin.name}
-                    className="w-7 h-7 rounded-full"
+                    className=" rounded-full h-6 w-6"
+                    width={100} // width in pixels
+                    height={100} // height in pixels
                   />
                   <span className="font-semibold text-lg">{coin.name}</span>
                 </div>

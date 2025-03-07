@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Navbar from "./components/Navbar";
 import CoinOverview from "./components/CoinOverview";
 import Suggestions from "./components/Suggestions";
@@ -60,7 +60,7 @@ export default function Home() {
       setAllCoins(coins); // Store the full list of coins (unfiltered)
       setLoading(false); // Set loading to false after data is fetched
     } catch (error) {
-      // console.error("Error fetching coin list:", error);
+      console.error("Error fetching coin list:", error);
       setLoading(false); // Set loading to false if there is an error
     }
   };
@@ -100,7 +100,7 @@ export default function Home() {
     return str.replace(/[.*+?^=!:${}()|\[\]\/\\]/g, "\\$&");
   };
 
-  const filterCoins = (): Coin[] => {
+  const filterCoins = useCallback((): Coin[] => {
     try {
       const sanitizedQuery = escapeSpecialChars(query);
       const regex = new RegExp(sanitizedQuery, "i");
@@ -111,7 +111,7 @@ export default function Home() {
       console.error("Invalid regex pattern:", error);
       return []; // Optionally, show an error message or fallback UI here
     }
-  };
+  }, [query, allCoins]);
 
   // useEffect to filter coins and reset stats when the query changes
   useEffect(() => {
@@ -121,7 +121,7 @@ export default function Home() {
     } else {
       setFilteredCoins([]); // Clear filtered coins when query is empty
     }
-  }, [query]);
+  }, [query, filterCoins]);
 
   // Handle selection of a coin from the dropdown
   const handleCoinSelect = (coinId: string) => {
@@ -176,7 +176,7 @@ export default function Home() {
                 {loading ? (
                   <p>Loading...</p>
                 ) : filteredCoins.length === 0 && query ? (
-                  <p>No tokens found matching "{query}"</p>
+                  <p>No tokens found matching &quot;{query}&quot;</p>
                 ) : (
                   <Suggestions
                     filteredCoins={filteredCoins}
