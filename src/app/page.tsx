@@ -136,7 +136,7 @@ export default function Home() {
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleSearch(); // Call the same search function when Enter is pressed
     }
