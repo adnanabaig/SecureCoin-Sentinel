@@ -135,7 +135,7 @@ export default function Home() {
       <div className="h-full flex text-white">
         <div className="pt-40 text-center w-full ">
           <h1 className="text-4xl font-bold mb-6 w-full">
-            SecureCoin Sentinel allcoins 
+            SecureCoin Sentinel  
           </h1>
           <p className="text-gray-300">
             Enter a token symbol to check for rug pull risks.
