@@ -21,9 +21,9 @@ const Page = () => {
   const [totalPages, setTotalPages] = useState(0); // Track total pages
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc"); // Track sorting order (ascending or descending)
 
-  const handleCoinSelect = (name: string) => {
-    // Navigate to the homepage and pass the coin's name in the query string
-    router.push(`/?coinSymbol=${name}`); // Pass the coin's name as a query parameter
+  const handleCoinSelect = (symbol: string) => {
+    // Navigate to the homepage and pass the coin's symbol in the query string
+    router.push(`/?coinSymbol=${symbol}`); // Pass the coin's symbol as a query parameter
   };
 
   useEffect(() => {
@@ -109,7 +109,7 @@ const Page = () => {
               <li
                 key={coin.id}
                 className="flex items-center justify-between p-2 border-b border-gray-200 cursor-pointer"
-                onClick={() => handleCoinSelect(coin.name)} // Select a coin when clicked
+                onClick={() => handleCoinSelect(coin.symbol)} // Select a coin when clicked
               >
                 <div className="flex items-center space-x-4 text-black">
                   {/* Optionally, display a logo if available */}

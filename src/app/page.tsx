@@ -4,9 +4,9 @@ import Navbar from "./components/Navbar";
 import CoinOverview from "./components/CoinOverview";
 import Suggestions from "./components/Suggestions";
 import StatsBox from "./components/StatsBox";
+import ArrowCircleRightIcon from "@mui/icons-material/ArrowCircleRight";
 
 import { useSearchParams } from "next/navigation"; // Import useSearchParams for query parameters
-import { all } from "axios";
 
 // Define types for the coin data and component state
 type Coin = {
@@ -68,6 +68,7 @@ export default function Home() {
   // Function to fetch the statistics of a specific coin using the symbol
   const fetchCoinStats = async (coinId: string) => {
     try {
+      coinId = coinId.toLowerCase();
       console.log("calling api with coinId", coinId);
       const response = await fetch(
         `https://api.coingecko.com/api/v3/coins/${coinId}`
@@ -129,13 +130,25 @@ export default function Home() {
     fetchCoinStats(coinId); // Fetch and display the stats of the selected coin
   };
 
+  const handleSearch = () => {
+    if (query) {
+      fetchCoinStats(query);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch(); // Call the same search function when Enter is pressed
+    }
+  };
+
   return (
     <div>
       <Navbar />
       <div className="h-full flex text-white">
         <div className="pt-40 text-center w-full ">
           <h1 className="text-4xl font-bold mb-6 w-full">
-            SecureCoin Sentinel  
+            SecureCoin Sentinel
           </h1>
           <p className="text-gray-300">
             Enter a token symbol to check for rug pull risks.
@@ -146,8 +159,18 @@ export default function Home() {
               className="w-full border-none outline-none text-white placeholder-gray-500"
               placeholder="Enter coin symbol or name"
               value={query}
+              onKeyDown={handleKeyPress} // Listen for Enter key press
               onChange={(e) => setQuery(e.target.value)} // Update query state
             />
+
+            {/* Round Enter Button */}
+            <button onClick={handleSearch} className="cursor-pointer">
+              <ArrowCircleRightIcon
+                className="text-white-500"
+                style={{ fontSize: "2rem" }}
+              />
+            </button>
+
             {!coinStats && (
               <div className="absolute top-18 w-1/2 h-24 mt-1">
                 {loading ? (
