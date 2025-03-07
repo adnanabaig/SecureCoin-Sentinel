@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SecureCoin Sentinel - Scam Detector</title>
+</head>
+<body>
+  <h1>SecureCoin Sentinel</h1>
+  <form id="scamForm">
+    <label for="contractText">Contract Text:</label><br>
+    <textarea id="contractText" placeholder="Enter contract text..." rows="6" cols="60"></textarea><br><br>
+    
+    <label for="csvData">Tokenomics Data (e.g., [0.1, -0.4]):</label><br>
+    <input id="csvData" type="text" placeholder='[0.1, -0.4]' size="60"><br><br>
+    
+    <label for="timeSeries">Time Series Data as JSON (e.g., [[1,100000,10,5],[2,150000,12,7],...]):</label><br>
+    <textarea id="timeSeries" placeholder='[[1, 100000, 10, 5], [2, 150000, 12, 7]]' rows="6" cols="60"></textarea><br><br>
+    
+    <button type="submit">Check Token</button>
+  </form>
+  <div id="result" style="margin-top:20px; font-size:18px;"></div>
+
+  <script>
+    document.getElementById("scamForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      // Gather input values
+      const contractText = document.getElementById("contractText").value;
+      let csvData;
+      let timeSeries;
+      try {
+        csvData = JSON.parse(document.getElementById("csvData").value);
+        timeSeries = JSON.parse(document.getElementById("timeSeries").value);
+      } catch (error) {
+        document.getElementById("result").innerText = "Invalid JSON format in tokenomics or time series data.";
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/predict", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contract_text: contractText,
+          csv_data: csvData,
+          time_series: timeSeries
+        })
+      });
+
+      const result = await response.json();
+      if(result.error){
+          document.getElementById("result").innerText = "Error: " + result.error;
+      } else {
+          document.getElementById("result").innerText = "Scam Probability: " + result.scam_probability.toFixed(4);
+      }
+    });
+  </script>
+</body>
+</html>
